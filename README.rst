@@ -41,7 +41,6 @@ Usage
 TODO
 -----
 
-- Add Python3 support.
 - Add test cases.
 
 

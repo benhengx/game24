@@ -4,6 +4,14 @@
 from __future__ import absolute_import, print_function, division
 
 import random
+import sys
+
+try:
+    import builtins
+    unichr = getattr(builtins, 'chr')
+    unicode = getattr(builtins, 'str')
+except ImportError:
+    pass
 
 from . import calc
 
@@ -26,13 +34,16 @@ class Card(object):
         self.integer = integer
 
     def __str__(self):
-        return unichr(self.code).encode('utf-8')
+        if sys.version < '3':
+            return unichr(self.code).encode('utf-8')
+        else:
+            return unichr(self.code)
 
     def __unicode__(self):
         return unichr(self.code)
 
     def __repr__(self):
-        return repr(unicode(self))
+        return repr(self.__unicode__())
 
 
 class Hand(object):

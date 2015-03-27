@@ -9,6 +9,12 @@ import readline
 import random
 import traceback
 
+try:
+    import builtins
+    raw_input = getattr(builtins, 'input')
+except ImportError:
+    pass
+
 from game24 import calc, game
 
 
@@ -98,7 +104,7 @@ class GameConsole(game.Game):
         while True:
             r = self.raw_input_ex(MSG_INPUT_NUMBERS % self.count).strip()
             try:
-                integers = map(int, r.strip().split())
+                integers = [int(s) for s in r.strip().split()]
             except ValueError:
                 print(MSG_INVALID_INPUT)
                 continue
@@ -198,7 +204,7 @@ class GameConsole(game.Game):
             if self.showcard:
                 sc = hand.str_cards()
             else:
-                sc = ' '.join(map(str, hand.integers))
+                sc = ' '.join([str(i) for i in hand.integers])
             self.print_title(MSG_PLAY_NEW_HAND % (len(self.hands), sc), 
                                                             dechar='+')
             print()
@@ -293,14 +299,14 @@ def arg_parse():
             parser.error('invalid number of integers provided, expect %d' % 
                                                                     r.count)
 
-        err_nums = filter(lambda x: not x.isdigit(), r.integers)
+        err_nums = [s for s in r.integers if not s.isdigit()]
         if err_nums:
             parser.error('invalid integers: %s' % str(err_nums))
 
-        r.integers = map(int, r.integers)
+        r.integers = [int(s) for s in r.integers]
 
-        err_nums = filter(lambda x: x < 1 or x > (r.face2ten and 10 or 13), 
-                                                                r.integers)
+        err_nums = [i for i in r.integers if i < 1 or 
+                        i > (r.face2ten and 10 or 13)]
         if err_nums:
             parser.error('invalid integers: %s' % str(err_nums))
 

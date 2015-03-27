@@ -4,6 +4,11 @@ from __future__ import absolute_import, print_function, division
 
 from fractions import Fraction
 
+try:
+    import __builtin__
+    cmp = getattr(__builtin__, 'cmp')
+except (ImportError, AttributeError):
+    def cmp(x, y): return (x > y) - (x < y)
 
 def opr_py2math(opr):
     return opr == '*' and '×' or (opr == '/' and '÷' or opr)
@@ -28,8 +33,23 @@ class BaseNumber(object):
     def __str__(self):
         return str(self.value)
 
+    def _detail_cmp(self, other):
+        return self.value - other.value
+
     def __cmp__(self, other):
-        return cmp(self.value, other.value)
+        c = self._index - other._index
+        if c:
+            return c
+        return self._detail_cmp(other)
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
+
+    def __eq__(self, other):
+        return self.__cmp__(other) == 0
 
 
 class Number(BaseNumber):
@@ -52,14 +72,23 @@ class Rand(object):
 
     def __cmp__(self, other):
         if self.reverse != other.reverse:
-            return cmp(self.reverse, other.reverse)
+            return self.reverse and 1 or -1
 
         elif type(self.number) != type(other.number):
             # Number comes before Expr
-            return cmp(self.number._index, other.number._index)
+            return self.number._index - other.number._index
 
         else:
-            return cmp(self.number, other.number)
+            return self.number.__cmp__(other.number)
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
+
+    def __eq__(self, other):
+        return self.__cmp__(other) == 0
 
 
 class Expr(BaseNumber):
@@ -164,19 +193,19 @@ class Expr(BaseNumber):
                 s = '%s %s %s' % (s, opr, rs)
         return s
 
-    def __cmp__(self, other):
+    def _detail_cmp(self, other):
         if self.opr != other.opr:
-            return cmp(self.opr, other.opr)
+            return ord(self.opr) - ord(other.opr)
 
         elif len(self.rands) != len(other.rands):
-            return cmp(len(self.rands), len(other.rands))
+            return len(self.rands) - len(other.rands)
 
         else:
             self.rands.sort()
             other.rands.sort()
 
             for i in range(len(self.rands)):
-                c = cmp(self.rands[i], other.rands[i])
+                c = self.rands[i].__cmp__(other.rands[i])
                 if c:
                     return c
             return 0
@@ -217,22 +246,13 @@ def expr_create(left, opr, right):
     return expr
 
 
-def num_cmp(x, y):
-    '''compare two numbers'''
-    if type(x) != type(y):
-        return cmp(x.__class__, y.__class__)
-
-    else:
-        return cmp(x, y)
-
-
 class State(object):
     '''State is a list of numbers created during calculating.
     Each number can either be a number or an expression
     '''
     def __init__(self, numbers):
         self.numbers = numbers
-        self.numbers.sort(cmp=num_cmp)
+        self.numbers.sort()
 
     def __repr__(self):
         return '<state: %s>' % repr(self.numbers)
@@ -242,13 +262,22 @@ class State(object):
 
     def __cmp__(self, other):
         if len(self.numbers) != len(other.numbers):
-            return cmp(len(self.numbers), len(other.numbers))
+            return len(self.numbers) - len(other.numbers)
 
         for i in range(len(self.numbers)):
-            c = num_cmp(self.numbers[i], other.numbers[i])
+            c = cmp(self.numbers[i], other.numbers[i])
             if c:
                 return c
         return 0
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
+
+    def __eq__(self, other):
+        return self.__cmp__(other) == 0
 
     def is_computable(self):
         return len(self.numbers) > 1

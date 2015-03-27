@@ -16,7 +16,7 @@ develop-eggs
 _build
 
 # virtualenv
-venv
+venv*
 
 # Installer logs
 pip-log.txt

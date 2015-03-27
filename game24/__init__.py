@@ -11,7 +11,7 @@ __title__ = 'game24'
 __summary__ = 'A console application to play the 24 game'
 __url__ = 'https://github.com/benhengx/game24'
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 __author__ = 'benhengx'
 __email__ = 'benhengx@gmail.com'
